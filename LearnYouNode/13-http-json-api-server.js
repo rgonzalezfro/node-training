@@ -25,14 +25,57 @@
 
   Your server should listen on the port provided by the first argument to
   your program.
- */
+  */
 
 'use strict'
 
 const http = require('http');
-
 const PORT = process.argv[2];
-const server = http.createServer();
 
+const PARSETIME = '/api/parsetime';
+const UNIXTIME = '/api/unixtime';
+
+const server = http.createServer((req, res) => {
+
+   const myUrl = new URL(`http://localhost:${PORT}${req.url}`);
+   let path = myUrl.pathname;
+   let value = myUrl.searchParams.get('iso')
+   let time = new Date(value)
+
+   let response;
+
+   switch (path) {
+      case PARSETIME:
+         response = getJsonDate(time);
+         break;
+      case UNIXTIME:
+         response = getUnixTime(time);
+         break;
+   }
+   if (response) {
+      res.writeHead(200, { 'Content-Type': 'application/json' })
+      res.end(JSON.stringify(response));
+   } else {
+      res.writeHead(404);
+      res.end();
+   }
+});
+
+
+function getJsonDate(time) {
+   let dateObject = {
+      hour: time.getHours(),
+      minute: time.getMinutes(),
+      second: time.getSeconds()
+   }
+   return dateObject;
+}
+
+function getUnixTime(time) {
+   let dateObject = {
+      unixtime: time.valueOf()
+   }
+   return dateObject;
+}
 
 server.listen(PORT);
